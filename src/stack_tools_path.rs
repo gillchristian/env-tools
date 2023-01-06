@@ -1,8 +1,7 @@
 use std::path::Path;
 use std::process::Command;
 
-// TODO: Take parameters to support arbitrary versions without changing the source
-fn stack_copiler_tools_path() -> String {
+fn stack_copiler_tools_path(versions: Vec<String>) -> String {
     let output = Command::new("sh")
         .arg("-c")
         .arg("stack path --compiler-tools-bin")
@@ -21,15 +20,17 @@ fn stack_copiler_tools_path() -> String {
         .parent()
         .unwrap();
 
-    // And then add a few other ones that we one
-    let versions = ["ghc-9.2.5/bin", "ghc-8.10.7/bin"];
-
-    let paths = versions.map(|p| stack_root.join(Path::new(p)).to_str().unwrap().to_owned());
-
-    paths.join(":")
+    // And then generate a few based on the user's input
+    versions
+        .into_iter()
+        .map(|v| format!("ghc-{}/bin", v))
+        .map(|p| stack_root.join(Path::new(&p)).to_str().unwrap().to_owned())
+        .collect::<Vec<String>>()
+        .join(":")
 }
 
-// TODO: Add subcommands for other purposes
 fn main() {
-    println!("{}", stack_copiler_tools_path())
+    let vs = std::env::args().skip(1).collect::<Vec<String>>();
+
+    println!("{}", stack_copiler_tools_path(vs));
 }
