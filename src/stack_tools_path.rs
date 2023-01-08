@@ -16,17 +16,18 @@ fn stack_copiler_tools_path(versions: Vec<String>) -> String {
     // So we drop the `/bin` and `/<ghc-version>` directories
     let stack_root = Path::new(stack_root.trim())
         .parent()
-        .unwrap()
-        .parent()
-        .unwrap();
+        .and_then(|p| p.parent());
 
-    // And then generate a few based on the user's input
-    versions
-        .into_iter()
-        .map(|v| format!("ghc-{}/bin", v))
-        .map(|p| stack_root.join(Path::new(&p)).to_str().unwrap().to_owned())
-        .collect::<Vec<String>>()
-        .join(":")
+    match stack_root {
+        None => "".to_string(),
+        // And then generate a few based on the user's input
+        Some(stack_root) => versions
+            .into_iter()
+            .map(|v| format!("ghc-{}/bin", v))
+            .map(|p| stack_root.join(Path::new(&p)).to_str().unwrap().to_owned())
+            .collect::<Vec<String>>()
+            .join(":"),
+    }
 }
 
 fn main() {
